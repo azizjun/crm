@@ -268,3 +268,35 @@ merge commits that do not belong in a feature pull request.
 the diff and writes one. Retitle it yourself and the automation stops.
 `CONTRIBUTING.md` is the whole account of how a change reaches `release`; read it
 before shipping.
+
+## Base44 sandbox
+
+`docker-compose.base44.yml` runs the web app, the API and Postgres from the
+cloned source. It is a development stack, not a deployment.
+
+- **Start:** `docker compose -f docker-compose.base44.yml up -d`. Add
+  `--profile seed` for the demo pipeline: `docker compose -f
+  docker-compose.base44.yml run --rm seed`.
+- **Hoisted install is required.** Next externalises `@prisma/client` and loads
+  it from `apps/app`. The generated client fails with `Failed to load external
+  module @prisma/client-<hash>/runtime/client` when Bun keeps its isolated
+  layout. The `install` service runs `bun install --frozen-lockfile
+  --linker=hoisted`. Remove `node_modules` before you change the linker.
+- **`@crm/db` postinstall needs `DATABASE_URL`.** The install service sets it.
+- **db scripts need `ALLOW_REMOTE_DB=1`.** The database host is `postgres`, not
+  localhost, and `require-local-db.ts` refuses that host.
+- **The browser reaches the API through the app.** The browser calls
+  `/api/*` on port 3000. The catch-all route proxies to `API_URL`. The app
+  service uses `API_URL=http://api:3001`. The API service uses
+  `API_URL=https://3000-$BASE44_PUBLIC_HOST_SUFFIX`, because Better Auth builds
+  every OAuth `redirect_uri` from it. That public origin reaches
+  `/api/auth/callback/*` through the same proxy.
+- **Register the callback URI with the provider.** The URI is
+  `https://3000-$BASE44_PUBLIC_HOST_SUFFIX/api/auth/callback/google`. It
+  changes when the sandbox is recreated.
+- **Sign-in needs Google or Microsoft credentials.** Without them the sign-in
+  page says "No way in yet". `bun run --filter=api dev:session` prints a session
+  cookie for local checks. It does not help a browser you do not control.
+- **The agent is not in the stack.** `apps/agent` needs its own deployment and
+  an `AI_GATEWAY_API_KEY`. Leave `AGENT_URL` unset; the Agent tab reports the
+  bridge as unconfigured.

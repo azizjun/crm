@@ -1,0 +1,28 @@
+{
+  "previewPort": 3000,
+  "healthPath": "/sign-in",
+  "startCommand": "docker compose -f docker-compose.base44.yml up -d",
+  "secrets": [
+    {
+      "name": "BETTER_AUTH_SECRET",
+      "description": "Signs session cookies. Generate with: openssl rand -base64 32",
+      "requiredAtBoot": true,
+      "generatedForDevelopment": true
+    },
+    {
+      "name": "ALLOWED_SIGN_IN",
+      "description": "The only authorization list. Comma-separated email domains or single addresses, for example acme.com or you@gmail.com",
+      "requiredAtBoot": true
+    },
+    {
+      "name": "GOOGLE_CLIENT_ID",
+      "description": "Google OAuth client id. It is the sign-in button and the Gmail/Calendar sync. Create it at https://console.cloud.google.com/apis/credentials",
+      "requiredAtBoot": false
+    },
+    {
+      "name": "GOOGLE_CLIENT_SECRET",
+      "description": "Google OAuth client secret for the same client. Set it together with GOOGLE_CLIENT_ID",
+      "requiredAtBoot": false
+    }
+  ]
+}
